@@ -1,0 +1,7 @@
+<!doctype html>
+{% for key, value in loaded_data.items() %}
+  {{key}}<br>
+    {% for player, count in value.items() %}
+      {{ player }} {{ count }}<br>
+    {% endfor %}
+{% endfor %}
