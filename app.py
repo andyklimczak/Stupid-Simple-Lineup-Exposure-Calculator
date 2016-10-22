@@ -1,26 +1,42 @@
-import os, json, csv, io
+import os, json, csv, io, math
 import pandas as pd
-from collections import defaultdict
-from flask import Flask, url_for, request, redirect, send_from_directory, session, render_template
+from collections import defaultdict, OrderedDict
+from flask import Flask, url_for, request, redirect, send_from_directory, session, render_template, flash
 
 ALLOWED_EXTENSIONS = set(['csv'])
 
 app = Flask(__name__)
 app.secret_key = '123'
 
-def calculate(data):
-    print(type(data).__name__)
+def number_of_lineups(col):
+    count = 0
+    for row in col:
+        if not math.isnan(row):
+            count += 1
+    print(count)
+    return count
+
+def regex_player_name(playerName):
+    return playerName[:playerName.index('(')]
+
+def calculate(data, count):
     dict = defaultdict(int)
     for player in data:
-        dict[player] += 1
+        if type(player) is not float: # check for nan
+            playerName = regex_player_name(player)
+            dict[playerName] += 1 / count
+
     return dict
 
 def parse(file):
-    dict = {}
+    dict = {};
     with io.StringIO(file.stream.read().decode("UTF8"), newline=None) as csv_file:
-        data = pd.read_csv(csv_file)
-        dict['QB'] = calculate(data['QB'])
-        dict['FLEX'] = calculate(pd.concat([data['WR'], data['RB']]))
+        data = pd.read_csv(csv_file, na_values=['nan'])
+        count = number_of_lineups(data['Entry ID'])
+        dict['QB'] = calculate(data['QB'], count)
+        dict['FLEX'] = calculate(pd.concat([data['RB'], data['RB.1'], data['WR'], data['WR.1'], data['WR.2'], data['TE'], data['FLEX']]), count)
+        dict['DST'] = calculate(data['DST'], count)
+
     return json.dumps(dict)
 
 

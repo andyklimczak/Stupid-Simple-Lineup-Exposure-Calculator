@@ -1,7 +1,7 @@
 <!doctype html>
 {% for key, value in loaded_data.items() %}
   {{key}}<br>
-    {% for player, count in value.items() %}
-      {{ player }} {{ count }}<br>
+    {% for player, exposure in value.items() %}
+      {{ player }} {{ '%0.2f' % exposure|float }}<br>
     {% endfor %}
 {% endfor %}
