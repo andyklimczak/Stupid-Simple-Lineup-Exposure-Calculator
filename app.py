@@ -31,7 +31,7 @@ def calculate(data, count):
 def parse(file):
     dict = {};
     with io.StringIO(file.stream.read().decode("UTF8"), newline=None) as csv_file:
-        data = pd.read_csv(csv_file, na_values=['nan'])
+        data = pd.read_csv(csv_file)
         count = number_of_lineups(data['Entry ID'])
         dict['QB'] = calculate(data['QB'], count)
         dict['FLEX'] = calculate(pd.concat([data['RB'], data['RB.1'], data['WR'], data['WR.1'], data['WR.2'], data['TE'], data['FLEX']]), count)
