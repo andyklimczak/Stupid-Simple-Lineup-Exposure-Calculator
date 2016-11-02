@@ -8,12 +8,23 @@ ALLOWED_EXTENSIONS = set(['csv'])
 app = Flask(__name__)
 app.secret_key = '123'
 
+def calculateFootball(data, count):
+    dict = {};
+    dict['QB'] = calculate(data['QB'], count)
+    dict['FLEX'] = calculate(pd.concat([data['RB'], data['RB.1'], data['WR'], data['WR.1'], data['WR.2'], data['TE'], data['FLEX']]), count)
+    dict['DST'] = calculate(data['DST'], count)
+    return dict
+
+def calculateBasketball(data, count):
+    dict = {};
+    dict['BALLERS'] = calculate(pd.concat([data['PG'], data['SG'], data['SF'], data['PF'], data['C'], data['G'], data['F'], data['UTIL']]), count)
+    return dict
+
 def number_of_lineups(col):
     count = 0
     for row in col:
         if not math.isnan(row):
             count += 1
-    print(count)
     return count
 
 def regex_player_name(playerName):
@@ -25,18 +36,17 @@ def calculate(data, count):
         if type(player) is not float: # check for nan
             playerName = regex_player_name(player)
             dict[playerName] += 1 / count
-
     return dict
 
 def parse(file):
-    dict = {};
     with io.StringIO(file.stream.read().decode("UTF8"), newline=None) as csv_file:
         data = pd.read_csv(csv_file)
         count = number_of_lineups(data['Entry ID'])
-        dict['QB'] = calculate(data['QB'], count)
-        dict['FLEX'] = calculate(pd.concat([data['RB'], data['RB.1'], data['WR'], data['WR.1'], data['WR.2'], data['TE'], data['FLEX']]), count)
-        dict['DST'] = calculate(data['DST'], count)
-
+        dict = {};
+        if 'QB' in data.columns:
+            dict = calculateFootball(data, count)
+        elif 'PG' in data.columns:
+            dict = calculateBasketball(data, count)
     return json.dumps(dict)
 
 
@@ -61,4 +71,4 @@ def index():
 @app.route('/upload')
 def done():
     loaded_data = json.loads(session['data'])
-    return render_template('done.html', loaded_data=loaded_data)
+    return render_template('done.html', data=loaded_data)
